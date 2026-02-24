@@ -1,0 +1,45 @@
+services:
+  # LiteLLM 網關服務
+  litellm:
+    image: ghcr.io/berriai/litellm:main-latest
+    container_name: litellm-gateway
+    ports:
+      - "4000:4000"
+    volumes:
+      - ./litellm_config.yaml:/app/config.yaml
+    command: ["--config", "/app/config.yaml", "--port", "4000"]
+
+  # Redis 缓存服務
+  redis:
+    image: redis:7
+    container_name: redis
+    ports:
+      - "6379:6379"
+
+  # 主 Agent API 服務
+  agent-api:
+    build: .
+    container_name: enterprise-agent
+    ports:
+      - "8000:8000"
+    depends_on:
+      - redis
+      - litellm
+    environment:
+      - SECRET_KEY=enterprise_secret
+
+  # MCP 資料庫服務
+  db-mcp:
+    build: .
+    container_name: db-mcp
+    command: uvicorn mcp.db_server:app --host 0.0.0.0 --port 5001
+    ports:
+      - "5001:5001"
+
+  # MCP Python 服務
+  python-mcp:
+    build: .
+    container_name: python-mcp
+    command: uvicorn mcp.python_server:app --host 0.0.0.0 --port 5002
+    ports:
+      - "5002:5002"
