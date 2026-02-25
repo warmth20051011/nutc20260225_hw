@@ -1,11 +1,15 @@
-from fastapi import FastAPI
-from pydantic import BaseModel
+from fastapi import FastAPI, Header
 
 app = FastAPI()
 
-class Request(BaseModel):
-    input: str
-
 @app.post("/run")
-def run(req: Request):
-    return {"result": f"Executed Python: {req.input}"}
+def run_python(data: dict, x_user_role: str = Header(None)):
+    code = data.get("code", "")
+    return {
+        "result": f"Python executed: {code}",
+        "role": x_user_role
+    }
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=5002)

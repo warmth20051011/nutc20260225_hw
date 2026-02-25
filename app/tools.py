@@ -1,29 +1,25 @@
-from dataclasses import dataclass
-from typing import Callable
-import requests
-
 #內部工具系統
-@dataclass
-class Tool:
-    name: str
-    description: str
-    endpoint: str
-
-
-def call_mcp(endpoint: str, payload: str):
-    response = requests.post(endpoint, json={"input": payload}, timeout=10)
-    return response.json()
-
+import requests
+from app.permissions import ROLE_SCOPES, TOOL_SCOPE_REQUIREMENT
 
 TOOL_REGISTRY = {
-    "db_query": Tool(
-        name="db_query",
-        description="Query enterprise database",
-        endpoint="http://db-mcp:5001/run"  
-    ),
-    "run_python": Tool(
-        name="run_python",
-        description="Execute secure Python code",
-        endpoint="http://python-mcp:5002/run" 
-    ),
+    "db_query": "http://localhost:5001/query",
+    "run_python": "http://localhost:5002/run"
 }
+
+def authorize_tool_call(role, tool_name):
+    required = TOOL_SCOPE_REQUIREMENT.get(tool_name)
+    if required not in ROLE_SCOPES.get(role, []):
+        raise Exception("Unauthorized tool call")
+
+def call_tool(role, tool_name, payload):
+    authorize_tool_call(role, tool_name)
+
+    url = TOOL_REGISTRY[tool_name]
+
+    headers = {
+        "X-User-Role": role
+    }
+
+    response = requests.post(url, json=payload, headers=headers)
+    return response.json()
