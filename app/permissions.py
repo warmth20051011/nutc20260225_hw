@@ -1,5 +1,5 @@
 #RBAC 權限控管
-from app.tools import TOOL_REGISTRY
+from app.config import ROLE_SCOPES, TOOL_SCOPE_REQUIREMENT
 
 ROLE_SCOPES = {
     "viewer": [],

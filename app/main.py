@@ -3,7 +3,7 @@ from pydantic import BaseModel
 from app.auth import get_current_user
 from app.agent import run_agent
 
-app = FastAPI()
+app = FastAPI(title="Enterprise Agent API")
 
 class AgentRequest(BaseModel):
     message: str
